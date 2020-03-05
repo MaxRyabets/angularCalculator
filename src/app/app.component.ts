@@ -12,6 +12,7 @@ export class AppComponent {
   operation = '';
   expression = [];
   result = 0;
+  // for buffer output expression
   temp = 0;
   numberFlag = false;
 
@@ -89,12 +90,10 @@ export class AppComponent {
         this.result = this.temp = 0;
       } else {
         this.result = this.temp = this.expression[0];
-        console.log('this is back', this.temp);
       }
     } else if (operand in this.clearEntry) {
       this.clearEntry[operand]();
       this.temp = this.expression[0];
-      console.log('this is temp', this.temp);
       this.result = this.temp;
       if (this.expression.length === 1) {
         this.expression.pop();
@@ -108,8 +107,6 @@ export class AppComponent {
   }
 
   addOperation(operand: string) {
-    console.log('This is operation', operand);
-    console.log(this.expression);
     this.numberFlag = false;
     const expLength = this.expression.length;
     this.searchClearOperation(operand);
@@ -165,9 +162,6 @@ export class AppComponent {
       this.expression[lastElementLength] = this.expression[lastElementLength] + num;
       this.result = this.expression[lastElementLength];
     }
-    console.log(this.expression);
-    console.log('This is operation in addExpression', this.operation);
-    console.log('This is expression in addExpression', this.expression);
   }
 
   private calc() {
@@ -186,7 +180,6 @@ export class AppComponent {
   init($event: Event) {
     // @ts-ignore
     const exp = $event.target.innerText;
-    console.log('This is event table', +exp);
     // search "." or number or operand
     if (AppComponent.POINT === exp) {
       this.addPoint(exp);
