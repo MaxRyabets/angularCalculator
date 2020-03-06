@@ -9,12 +9,15 @@ import {delay} from 'rxjs/operators';
 export class AppComponent {
   public static POINT = '.';
   public static POW = 'x^2';
+  public static CE = 'CE';
+  public static PLUS_MINUS = '+/-';
+  public static BACKSPACE = '<-';
   operation = '';
   expression = [];
   result = 0;
-  // for buffer output expression
   temp = 0;
   numberFlag = false;
+  queueOperations = [];
 
   private operators = {
     '+': (x, y) => (x + y).toString(),
@@ -26,7 +29,7 @@ export class AppComponent {
   private singleNumberOperation = {
     '=': () => this.result,
     '+/-': () => (this.result * (-1)).toString(),
-   };
+  };
 
   private powerOperation = {
     'x^2': (x) => Math.pow(x, 2).toString(),
@@ -38,7 +41,10 @@ export class AppComponent {
       if (expLength > 1) {
         this.expression[expLength - 1] = '0';
       } else {
-        this.expression[0] = 0;
+        this.expression[0] = '0';
+      }
+      if (expLength > 2) {
+        this.expression = [];
       }
     }
   };
@@ -52,7 +58,8 @@ export class AppComponent {
         if (lastElemExp.length === 1) {
           // if last element equal length 1, but expression have two numbers
           if (this.expression.length === 2) {
-            this.expression[lastElemLength] = '0';
+            this.expression[this.expression.length - 1] = '0';
+            this.numberFlag = true;
           } else {
             this.expression = [];
           }
@@ -69,13 +76,15 @@ export class AppComponent {
   };
 
   addPoint(point: string) {
-    // if not have point then add, else if one number ignore point, else after operand then point
     const expLength = this.expression[this.expression.length - 1];
     if (!expLength.includes('.')) {
       this.expression[this.expression.length - 1] = expLength + point;
     } else if (expLength.includes('.') && this.operation.length === 0) {
+      this.result = this.expression[this.expression.length - 1];
     } else {
-      this.expression[this.expression.length - 1] = '0.';
+      if (this.expression.length === 1) {
+        this.expression.push('0.');
+      }
       this.result = this.expression[this.expression.length - 1];
       this.numberFlag = true;
     }
@@ -89,15 +98,16 @@ export class AppComponent {
       if (this.expression.length === 0) {
         this.result = this.temp = 0;
       } else {
-        this.result = this.temp = this.expression[0];
+        this.result = this.temp = this.expression[this.expression.length - 1];
+        this.numberFlag = true;
       }
     } else if (operand in this.clearEntry) {
       this.clearEntry[operand]();
-      this.temp = this.expression[0];
-      this.result = this.temp;
+      this.temp = this.expression[this.expression.length - 1];
       if (this.expression.length === 1) {
         this.expression.pop();
       }
+      this.result = this.temp;
     }
   }
 
@@ -106,19 +116,65 @@ export class AppComponent {
     this.calc();
   }
 
+  private expFirstClear(expLength: number) {
+    if (expLength > 0) {
+      this.expression[expLength - 1] = '0';
+      this.temp = this.expression.pop();
+    }
+  }
+
+  unaryMinus(operand: string) {
+    if (operand === '+') {
+      this.operation = '-';
+    } else {
+      this.operation = '+';
+    }
+    this.expression[this.expression.length - 1] = (this.expression[this.expression.length - 1] * (-1)).toString();
+    this.result = this.expression[this.expression.length - 1];
+  }
+
+  unaryOperations(operand: string) {
+    if (this.expression.length > 1) {
+      this.unaryMinus(operand);
+    } else {
+      this.operation = operand;
+      this.singleOperation();
+    }
+    this.numberFlag = true;
+  }
+
+  expQueueOperations(operand: string) {
+    this.queueOperations.push(operand);
+    this.operation = this.queueOperations.shift();
+    this.calc();
+    this.operation = this.queueOperations.shift();
+    this.queueOperations = [];
+  }
+
   addOperation(operand: string) {
     this.numberFlag = false;
     const expLength = this.expression.length;
+    const opLength = this.operation.length;
     this.searchClearOperation(operand);
-    if (operand === AppComponent.POW && this.operation.length !== 0) {
+    if (operand === AppComponent.POW && opLength !== 0) {
       this.expFirstPow(operand, expLength);
+    } else if (operand === AppComponent.CE && opLength !== 0) {
+      this.expFirstClear(expLength);
+    } else if (operand === AppComponent.BACKSPACE && this.queueOperations.length === 0) {
+      this.queueOperations.push(this.operation);
+    } else if (operand === AppComponent.PLUS_MINUS) {
+      this.unaryOperations(operand);
     } else {
-      if (expLength === 2) {
-        this.calc();
-      }
-      this.operation = operand;
-      if (this.result !== 0 && (operand in this.singleNumberOperation || operand in this.powerOperation)) {
-        this.calc();
+      if (this.queueOperations.length !== 0) {
+        this.expQueueOperations(operand);
+      } else {
+        if (expLength === 2 && opLength !== 0) {
+          this.calc();
+        }
+        this.operation = operand;
+        if (this.result !== 0 && (operand in this.singleNumberOperation || operand in this.powerOperation)) {
+          this.calc();
+        }
       }
     }
   }
@@ -135,6 +191,7 @@ export class AppComponent {
       }
       this.expression[0] = this.temp;
       this.result = this.temp;
+      this.numberFlag = true;
     }
   }
 
