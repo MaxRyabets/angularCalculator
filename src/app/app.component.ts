@@ -196,14 +196,12 @@ export class AppComponent {
   }
 
   private expInfinity() {
-    // tslint:disable-next-line:triple-equals
-    if (this.temp == Infinity) {
+    // tslint:disable-next-line:triple-equals use-isnan
+    if (this.temp == Infinity || isNaN(this.temp)) {
       this.result = this.temp;
-      setTimeout(() => {
-        this.result = 0;
-        this.temp = 0;
-        this.expression = [];
-      }, 1000);
+      this.result = 0;
+      this.temp = 0;
+      this.expression.length = 0;
     }
   }
 
