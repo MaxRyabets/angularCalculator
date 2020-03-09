@@ -1,4 +1,9 @@
 <div class="container">
+  <div class="result">
+    <em *ngIf="expression[0]">{{expression[0] + " "}}</em>
+    <em *ngIf="operation !== 'CE' && (expression[0] || expression[1])">{{operation}}</em>
+    <em *ngIf="expression[1]">{{" " + expression[1]}}</em>
+  </div>
   <label for="result"></label>
   <input id="result" name="result" class="form-control" type="text" [value]="result" readonly>
   <table class="table table-bordered" (click)="init($event)">
