@@ -169,7 +169,7 @@ export class AppComponent {
   private mixedPow(operand: string) {
     // if pow for simple expression 5 + (3^2) = 14
     if (this.expression.length === 1) {
-      this.result = this.pow[operand](this.expression[this.expression.length - 1]).toString();
+      this.result = this.pow[operand](this.expression.pop()).toString();
     } else {
       // if pow for hard expression 5 + 3 + (this result 5 + 3 = 8)^2 = 72
       this.result = this.pow[operand](this.expression.pop()).toString();
